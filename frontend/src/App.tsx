@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 
 function App(): React.ReactElement {
@@ -8,10 +8,11 @@ function App(): React.ReactElement {
         <header className="app-header">
           <h1>E-Commerce Store</h1>
           <nav>
-            <a href="/">Home</a>
-            <a href="/products">Products</a>
-            <a href="/cart">Cart</a>
-            <a href="/login">Login</a>
+            {/* Dùng Link giúp chuyển trang không bị load lại và không bị lỗi 404 */}
+            <Link to="/">Home</Link>
+            <Link to="/products">Products</Link>
+            <Link to="/cart">Cart</Link>
+            <Link to="/login">Login</Link>
           </nav>
         </header>
 
@@ -32,6 +33,7 @@ function App(): React.ReactElement {
   );
 }
 
+// Các Component bên dưới giữ nguyên logic của bạn
 function HomePage(): React.ReactElement {
   return <div><h2>Welcome to E-Commerce Store</h2></div>;
 }

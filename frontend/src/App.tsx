@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
 
@@ -6,9 +6,7 @@ function App(): React.ReactElement {
   const [userName, setUserName] = useState<string | null>(localStorage.getItem('userName'));
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userName');
+    localStorage.clear(); // Xóa sạch token và name
     setUserName(null);
     window.location.hash = "/login";
   };
@@ -58,7 +56,7 @@ function HomePage(): React.ReactElement {
       <h2 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>Welcome to E-Commerce Store</h2>
       <p style={{ fontSize: '1.2rem', color: '#888', marginBottom: '40px' }}>Khám phá thế giới công nghệ trong tầm tay bạn.</p>
       <Link to="/products">
-         <button style={{ padding: '15px 40px', cursor: 'pointer', backgroundColor: '#00d4ff', border: 'none', borderRadius: '8px', fontWeight: 'bold', color: 'black', fontSize: '1.1rem', transition: '0.3s' }}>
+         <button style={{ padding: '15px 40px', cursor: 'pointer', backgroundColor: '#00d4ff', border: 'none', borderRadius: '8px', fontWeight: 'bold', color: 'black', fontSize: '1.1rem' }}>
             Mua sắm ngay
          </button>
       </Link>
@@ -72,7 +70,8 @@ function ProductsPage(): React.ReactElement {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const apiUrl = (import.meta as any).env.VITE_API_URL || 'https://web-s-ch.onrender.com/api';
+    // Luôn ưu tiên dùng link production của Render
+    const apiUrl = 'https://web-s-ch.onrender.com/api';
     
     fetch(`${apiUrl}/products`)
       .then(res => res.json())
@@ -101,7 +100,7 @@ function ProductsPage(): React.ReactElement {
       {products && products.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px', maxWidth: '1200px', margin: '0 auto' }}>
           {products.map((item: any) => (
-            <div key={item._id || Math.random()} className="product-card" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333', padding: '20px', borderRadius: '15px', textAlign: 'center', transition: '0.3s' }}>
+            <div key={item._id || Math.random()} className="product-card" style={{ backgroundColor: '#1a1a1a', border: '1px solid #333', padding: '20px', borderRadius: '15px', textAlign: 'center' }}>
               <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
                 <img src={(item.images && item.images.length > 0) ? item.images[0] : 'https://via.placeholder.com/150'} alt={item.name} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '10px' }} />
               </div>
@@ -132,19 +131,22 @@ function LoginPage({ setUserName }: { setUserName: (name: string | null) => void
   const [isLogin, setIsLogin] = useState(true);
 
   const handleSubmit = async () => {
-    const apiUrl = (import.meta as any).env.VITE_API_URL || 'https://web-s-ch.onrender.com/api';
+    // Sửa apiUrl cứng để test, đảm bảo khớp với Backend Render
+    const apiUrl = 'https://web-s-ch.onrender.com/api';
+    // QUAN TRỌNG: Phải có /auth ở giữa vì Backend khai báo app.use('/api/auth', authRouter)
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
     
     try {
+      console.log("Đang gọi:", `${apiUrl}${endpoint}`);
       const res = await fetch(`${apiUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name })
       });
+      
       const data = await res.json();
       
       if (res.ok) {
-        // Lưu token và thông tin user
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('userName', data.user.name);
         setUserName(data.user.name);
@@ -152,15 +154,16 @@ function LoginPage({ setUserName }: { setUserName: (name: string | null) => void
         alert(`${isLogin ? "Đăng nhập" : "Đăng ký"} thành công! Chào ${data.user.name}`);
         window.location.hash = "/";
       } else {
-        alert(data.error || "Có lỗi xảy ra!");
+        alert(data.error || data.message || "Có lỗi xảy ra!");
       }
     } catch (err) {
-      alert("Lỗi kết nối Server! Tiến check lại Render nhé.");
+      console.error("Lỗi fetch:", err);
+      alert("Lỗi kết nối Server! Tiến kiểm tra xem Render đã báo 'Live' chưa nhé.");
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '80px auto', padding: '40px', border: '1px solid #333', borderRadius: '20px', textAlign: 'center', backgroundColor: '#111', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+    <div style={{ maxWidth: '400px', margin: '80px auto', padding: '40px', border: '1px solid #333', borderRadius: '20px', textAlign: 'center', backgroundColor: '#111' }}>
       <h2 style={{ color: '#00d4ff', marginBottom: '30px' }}>{isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"}</h2>
       
       {!isLogin && (
@@ -171,7 +174,7 @@ function LoginPage({ setUserName }: { setUserName: (name: string | null) => void
       
       <input type="password" placeholder="Mật khẩu" value={password} style={{ width: '100%', padding: '12px', marginBottom: '25px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '8px' }} onChange={(e) => setPassword(e.target.value)} />
       
-      <button onClick={handleSubmit} style={{ width: '100%', padding: '14px', backgroundColor: isLogin ? '#00d4ff' : '#28a745', color: isLogin ? 'black' : 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem' }}>
+      <button onClick={handleSubmit} style={{ width: '100%', padding: '14px', backgroundColor: isLogin ? '#00d4ff' : '#28a745', color: isLogin ? 'black' : 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
         {isLogin ? "Vào cửa hàng" : "Tạo tài khoản ngay"}
       </button>
 

@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7
+    container_name: ecommerce-mongodb
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ecommerce-backend
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://root:root@mongo:27017/ecommerce?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_change_in_production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your_refresh_secret_key_change_in_production}
+      JWT_EXPIRY: 1h
+      REFRESH_TOKEN_EXPIRY: 7d
+      VNPAY_MERCHANT_ID: ${VNPAY_MERCHANT_ID:-your_merchant_id}
+      VNPAY_SECRET_KEY: ${VNPAY_SECRET_KEY:-your_secret_key}
+      VNPAY_API_URL: https://sandbox.vnpayment.vn
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ecommerce-frontend
+    ports:
+      - '5173:80'
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+      VITE_APP_NAME: E-Commerce Store
+    depends_on:
+      - backend
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+
+networks:
+  ecommerce-net:
+    driver: bridge

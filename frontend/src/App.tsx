@@ -49,5 +49,5 @@ function CartPage(): React.ReactElement {
 function LoginPage(): React.ReactElement {
   return <div><h2>Login (Coming Soon)</h2></div>;
 }
-ss
+
 export default App;

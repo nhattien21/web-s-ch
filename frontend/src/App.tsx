@@ -33,7 +33,6 @@ function App(): React.ReactElement {
   );
 }
 
-// --- TRANG CHỦ ---
 function HomePage(): React.ReactElement {
   return (
     <div style={{ textAlign: 'center', padding: '50px' }}>
@@ -48,21 +47,18 @@ function HomePage(): React.ReactElement {
   );
 }
 
-// --- TRANG SẢN PHẨM (Đã sửa lỗi e.map) ---
+// --- TRANG SẢN PHẨM ---
 function ProductsPage(): React.ReactElement {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Sửa lỗi TypeScript env bằng cách dùng (import.meta as any)
     const apiUrl = (import.meta as any).env.VITE_API_URL || 'https://web-s-ch.onrender.com/api';
     
     fetch(`${apiUrl}/products`)
       .then(res => res.json())
       .then(data => {
-        console.log("Dữ liệu nhận từ Render:", data);
-        
-        // SỬA LỖI QUAN TRỌNG: API của Tiến trả về { items: [...] }
+        // API trả về { items: [...] } nên phải lấy data.items
         if (data && Array.isArray(data.items)) {
           setProducts(data.items);
         } else if (Array.isArray(data)) {
@@ -85,7 +81,6 @@ function ProductsPage(): React.ReactElement {
     <div style={{ padding: '30px' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>Sản phẩm mới nhất</h2>
       
-      {/* Kiểm tra an toàn trước khi map */}
       {products && products.length > 0 ? (
         <div style={{ 
           display: 'grid', 
@@ -97,7 +92,12 @@ function ProductsPage(): React.ReactElement {
               backgroundColor: '#1e1e1e', border: '1px solid #333', padding: '15px', borderRadius: '12px', textAlign: 'center' 
             }}>
               <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '15px' }}>
-                <img src={item.image} alt={item.name} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '8px' }} />
+                {/* SỬA LỖI HIỂN THỊ ẢNH: Lấy item.images[0] vì images là mảng */}
+                <img 
+                  src={(item.images && item.images.length > 0) ? item.images[0] : 'https://via.placeholder.com/150'} 
+                  alt={item.name} 
+                  style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '8px' }} 
+                />
               </div>
               <h3 style={{ fontSize: '1.1rem' }}>{item.name}</h3>
               <p style={{ color: '#00d4ff', fontWeight: 'bold' }}>{Number(item.price || 0).toLocaleString()}đ</p>
@@ -110,7 +110,7 @@ function ProductsPage(): React.ReactElement {
       ) : (
         <div style={{ textAlign: 'center', color: '#888' }}>
             <p>Hiện tại chưa có sản phẩm nào trong kho.</p>
-            <p><small>(Vui lòng thêm dữ liệu vào MongoDB Atlas)</small></p>
+            <p><small>(Vui lòng kiểm tra Database Atlas của bạn)</small></p>
         </div>
       )}
     </div>
@@ -143,8 +143,8 @@ function LoginPage(): React.ReactElement {
   return (
     <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #333', borderRadius: '10px', textAlign: 'center' }}>
       <h2>Đăng ký tài khoản</h2>
-      <input type="email" placeholder="Email" value={email} style={{ width: '90%', padding: '10px', marginBottom: '10px' }} onChange={(e) => setEmail(e.target.value)} />
-      <input type="password" placeholder="Mật khẩu" value={password} style={{ width: '90%', padding: '10px', marginBottom: '20px' }} onChange={(e) => setPassword(e.target.value)} />
+      <input type="email" placeholder="Email" value={email} style={{ width: '90%', padding: '10px', marginBottom: '10px', background: '#222', color: '#fff' }} onChange={(e) => setEmail(e.target.value)} />
+      <input type="password" placeholder="Mật khẩu" value={password} style={{ width: '90%', padding: '10px', marginBottom: '20px', background: '#222', color: '#fff' }} onChange={(e) => setPassword(e.target.value)} />
       <button onClick={handleRegister} style={{ width: '100%', padding: '12px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
         Đăng ký thành viên
       </button>
